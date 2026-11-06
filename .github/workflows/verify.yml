@@ -31,7 +31,10 @@ jobs:
           chmod +x kind
           sudo mv kind /usr/local/bin/kind
           kind create cluster --wait 180s
-          kind load docker-image llm-cpu:0.27.0 llm-downloader:0.27.0
+          docker save llm-cpu:0.27.0 llm-downloader:0.27.0 | gzip -1 > /tmp/llm-images.tar.gz
+          docker image rm llm-cpu:0.27.0 llm-downloader:0.27.0
+          gzip -dc /tmp/llm-images.tar.gz | docker exec --privileged -i kind-control-plane ctr --namespace=k8s.io images import --all-platforms --digests --snapshotter=overlayfs -
+          rm /tmp/llm-images.tar.gz
           kubectl apply -f k8s/namespace.yaml
           API_TOKEN="$(openssl rand -hex 32)"
           echo "::add-mask::$API_TOKEN"
