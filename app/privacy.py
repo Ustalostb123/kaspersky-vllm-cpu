@@ -10,6 +10,10 @@ class SafeFormatter(logging.Formatter):
     def format(self, record):
 
         data = {"level": record.levelname, "event": "runtime_log"}
+        if record.exc_info:
+            error = record.exc_info[0]
+            if error is not None and error.__module__ == 'builtins':
+                data['error_type'] = error.__name__
         if record.name == "audit" and isinstance(record.msg, dict):
             data = {k: record.msg[k] for k in
                     ("event", "request_id", "endpoint", "status", "duration_ms")

@@ -41,8 +41,21 @@ jobs:
           echo "API_TOKEN=$API_TOKEN" >> "$GITHUB_ENV"
           kubectl -n llm-cpu create secret generic inference-secrets --from-literal=hf-token= --from-literal="api-token=$API_TOKEN"
           kubectl apply -k k8s
-          kubectl -n llm-cpu set resources deployment/inference -c server --requests=cpu=1,memory=3Gi --limits=cpu=2,memory=5Gi
-          kubectl -n llm-cpu rollout status deployment/inference --timeout=15m
+          kubectl -n llm-cpu set resources deployment/inference -c server --requests=cpu=1,memory=3Gi --limits=cpu=2,memory=6Gi
+          kubectl -n llm-cpu rollout status deployment/inference --timeout=15m &
+          rollout_pid=$!
+          while kill -0 "$rollout_pid" 2>/dev/null; do
+            kubectl -n llm-cpu get pods
+            kubectl -n llm-cpu get events --field-selector=type=Warning --no-headers || true
+            kubectl -n llm-cpu logs deployment/inference -c server --tail=5 || true
+            restarts="$(kubectl -n llm-cpu get pods -l app=inference -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}' 2>/dev/null || true)"
+            if [[ "$restarts" =~ ^[0-9]+$ ]] && [ "$restarts" -gt 0 ]; then
+              kill "$rollout_pid" 2>/dev/null || true
+              exit 1
+            fi
+            sleep 20
+          done
+          wait "$rollout_pid"
       - name: Запрос к модели
         run: |
           kubectl -n llm-cpu port-forward service/inference 8000:8000 > /tmp/port-forward.log 2>&1 &
@@ -66,6 +79,7 @@ jobs:
         if: failure()
         run: |
           kubectl -n llm-cpu get pods -o wide || true
+          kubectl -n llm-cpu describe pods || true
           kubectl -n llm-cpu get events --sort-by=.lastTimestamp || true
           kubectl -n llm-cpu logs deployment/inference -c server --tail=80 || true
           kubectl -n llm-cpu logs deployment/inference -c download-model --tail=30 || true
