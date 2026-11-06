@@ -1,4 +1,3 @@
-"""Build a small, validated argument list; privacy flags cannot be overridden."""
 import glob
 import json
 import os
@@ -17,7 +16,7 @@ def main():
     model = Path('/models') / os.environ['MODEL_REVISION']
     if not (model / '.complete.json').is_file():
         raise RuntimeError('Model download is incomplete')
-    # CPU wheel needs Intel OpenMP preloaded, before torch is imported.
+
     libraries = glob.glob(sys.prefix + '/**/libiomp5.so', recursive=True)
     if not libraries:
         raise RuntimeError('Intel OpenMP library not found')
@@ -30,8 +29,8 @@ def main():
             '--served-model-name', 'local-instruct',
             '--middleware', 'privacy.AuditMiddleware',
             '--log-config-file', '/config/logging.json', '--disable-uvicorn-access-log']
-    # Request and output logging default to False in the pinned vLLM version.
-    # They cannot be turned on through ConfigMap: keys above are an allowlist.
+
+
     for name, value in config.items():
         if isinstance(value, bool):
             args.append('--' + ('' if value else 'no-') + name)

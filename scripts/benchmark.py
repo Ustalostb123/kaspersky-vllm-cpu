@@ -1,4 +1,3 @@
-"""SSE benchmark. Only usage counts and timing are printed, never model text."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import json
@@ -56,7 +55,7 @@ def main():
     failed = False
     for label, prompt in [('short', 'Explain what a database index does.'),
                           ('long', 'Summarize this text: ' + 'A database stores records and uses indexes for searching. ' * 100)]:
-        # Warm-up is excluded from the timed workload.
+
         if request_once(args.url, token, prompt) is None:
             raise SystemExit('Warm-up failed; check readiness and API_TOKEN')
         start = time.perf_counter()

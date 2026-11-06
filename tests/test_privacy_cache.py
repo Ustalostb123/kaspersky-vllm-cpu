@@ -66,7 +66,7 @@ class PrivacyTests(unittest.TestCase):
         self.assertEqual(status, 500)
 
     def test_verified_warm_cache_does_not_import_hf(self):
-        # Windows lacks fcntl; only the lock syscall is stubbed here.
+
         stub = types.SimpleNamespace(flock=lambda *args: None, LOCK_EX=2)
         with patch.dict(sys.modules, {'fcntl': stub}):
             spec = importlib.util.spec_from_file_location('download_model', ROOT / 'app/download_model.py')

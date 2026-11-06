@@ -1,4 +1,3 @@
-"""Immutable revision, atomic completion, verified local cache before any HF call."""
 import fcntl
 import hashlib
 import json
@@ -42,7 +41,7 @@ def main():
         target = root / revision
         if valid_cache(target, model_id, revision):
             print('{"event":"model_cache_hit"}', flush=True)
-            return  # No import or call to HF on the warm path.
+            return
         staging = root / (revision + '.partial')
         if staging.exists():
             shutil.rmtree(staging)
@@ -69,6 +68,6 @@ if __name__ == '__main__':
     try:
         main()
     except Exception:
-        # HF HTTP errors can contain tokens or signed URLs; do not print exceptions.
+
         print('{"event":"model_download_failed"}', file=sys.stderr)
         sys.exit(1)

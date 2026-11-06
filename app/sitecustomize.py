@@ -1,4 +1,3 @@
-"""Do not print unhandled exception text, which may contain request data."""
 import sys
 
 

@@ -1,4 +1,3 @@
-"""Log request metadata only, including failures and streaming requests."""
 import json
 import logging
 import os
@@ -9,7 +8,7 @@ import uuid
 
 class SafeFormatter(logging.Formatter):
     def format(self, record):
-        # Never format record.msg, args, exc_info or stack_info: all may contain input.
+
         data = {"level": record.levelname, "event": "runtime_log"}
         if record.name == "audit" and isinstance(record.msg, dict):
             data = {k: record.msg[k] for k in
@@ -35,7 +34,7 @@ class AuditMiddleware:
         request_id = uuid.uuid4().hex
         start = time.perf_counter()
         status = 500
-        # Never log raw URLs, headers, user-controlled IDs, request or response bodies.
+
         endpoint = path if path in ("/v1/chat/completions", "/v1/completions", "/v1/models") else "other"
 
         async def tracked_send(message):
