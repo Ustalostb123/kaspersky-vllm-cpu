@@ -1,0 +1,16 @@
+FROM python:3.12.12-slim-bookworm AS build
+WORKDIR /build
+RUN pip install --no-cache-dir uv==0.8.22
+COPY downloader-requirements.txt .
+RUN uv venv --python /usr/local/bin/python /opt/venv && \
+    uv pip sync --python /opt/venv/bin/python --require-hashes --only-binary :all: downloader-requirements.txt
+
+FROM python:3.12.12-slim-bookworm
+RUN groupadd -g 10001 app && useradd -u 10001 -g 10001 -m app
+COPY --from=build /opt/venv /opt/venv
+WORKDIR /app
+COPY app/download_model.py ./
+ENV PATH=/opt/venv/bin:$PATH PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
+    HOME=/home/app HF_HUB_DISABLE_PROGRESS_BARS=1 HF_HUB_DISABLE_TELEMETRY=1
+USER 10001:10001
+ENTRYPOINT ["python", "/app/download_model.py"]
