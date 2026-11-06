@@ -1,5 +1,6 @@
 FROM python:3.12.12-slim-bookworm AS build
 WORKDIR /build
+ENV UV_NO_CACHE=1
 RUN pip install --no-cache-dir uv==0.8.22
 COPY downloader-requirements.txt .
 RUN uv venv --python /usr/local/bin/python /opt/venv && \
